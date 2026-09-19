@@ -55,16 +55,21 @@ public class BenchmarkTest00051 extends HttpServlet {
             a1 = "sh";
             a2 = "-c";
         }
-        String[] args = {a1, a2, "echo " + param};
+        // Validate param to allow only safe characters (alphanumeric and limited punctuation)
+        if (!param.matches("[a-zA-Z0-9_\- ]*")) {
+            throw new ServletException("Invalid input parameter");
+        }
 
-        ProcessBuilder pb = new ProcessBuilder(args);
+        // Use ProcessBuilder with separate arguments to avoid command injection
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command(a1, a2, "echo", param);
 
         try {
             Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println(
-                    "Problem executing cmdi - java.lang.ProcessBuilder(java.lang.String[]) Test Case");
+                    "Problem executing cmdi - java.lang.ProcessBuilder command list Test Case");
             throw new ServletException(e);
         }
     }
