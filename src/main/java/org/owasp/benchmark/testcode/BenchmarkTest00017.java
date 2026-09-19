@@ -60,7 +60,16 @@ public class BenchmarkTest00017 extends HttpServlet {
         Runtime r = Runtime.getRuntime();
 
         try {
-            Process p = r.exec(cmd + param);
+            // Validate param against a whitelist of allowed values
+if (!param.matches("[a-zA-Z0-9_\- ]*")) {
+    response.getWriter().println("Invalid input");
+    return;
+}
+
+// Use ProcessBuilder with separate arguments to avoid command injection
+ProcessBuilder pb = new ProcessBuilder();
+pb.command(cmd, param);
+Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
