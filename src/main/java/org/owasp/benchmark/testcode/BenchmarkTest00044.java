@@ -53,13 +53,20 @@ public class BenchmarkTest00044 extends HttpServlet {
             String base = "ou=users,ou=system";
             javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
             sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
-            String filter = "(&(objectclass=person)(uid=" + param + "))";
+            String filter = "(&(objectclass=person)(uid={0}))";
+            javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
+            sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+            javax.naming.directory.DirContext ctx = ads.getDirContext();
+            javax.naming.directory.SearchControls controls = new javax.naming.directory.SearchControls();
+            controls.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+
+            // Escape param for LDAP filter to prevent injection
+            String safeParam = org.owasp.esapi.ESAPI.encoder().encodeForLDAP(param);
+
+            javax.naming.directory.NamingEnumeration<javax.naming.directory.SearchResult> results = ctx.search(base, filter, new Object[]{safeParam}, controls);
             boolean found = false;
-            javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
-                    ctx.search(base, filter, sc);
             while (results.hasMore()) {
-                javax.naming.directory.SearchResult sr =
-                        (javax.naming.directory.SearchResult) results.next();
+                javax.naming.directory.SearchResult sr = (javax.naming.directory.SearchResult) results.next();
                 javax.naming.directory.Attributes attrs = sr.getAttributes();
 
                 javax.naming.directory.Attribute attr = attrs.get("uid");
@@ -69,17 +76,9 @@ public class BenchmarkTest00044 extends HttpServlet {
                             .println(
                                     "LDAP query results:<br>"
                                             + "Record found with name "
-                                            + org.owasp
-                                                    .esapi
-                                                    .ESAPI
-                                                    .encoder()
-                                                    .encodeForHTML(attr.get().toString())
+                                            + org.owasp.esapi.ESAPI.encoder().encodeForHTML(attr.get().toString())
                                             + "<br>Address: "
-                                            + org.owasp
-                                                    .esapi
-                                                    .ESAPI
-                                                    .encoder()
-                                                    .encodeForHTML(attr2.get().toString())
+                                            + org.owasp.esapi.ESAPI.encoder().encodeForHTML(attr2.get().toString())
                                             + "<br>");
                     found = true;
                 }
