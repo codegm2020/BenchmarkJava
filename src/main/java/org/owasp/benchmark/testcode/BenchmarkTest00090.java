@@ -68,7 +68,10 @@ public class BenchmarkTest00090 extends HttpServlet {
         // Simple if statement that assigns constant to bar on true condition
         int num = 86;
         if ((7 * 42) - num > 200) bar = "This_should_always_happen";
-        else bar = param;
+        else {
+            response.getWriter().println("Invalid input detected.");
+            return;
+        }
 
         String cmd = "";
         String osName = System.getProperty("os.name");
@@ -76,10 +79,9 @@ public class BenchmarkTest00090 extends HttpServlet {
             cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
         }
 
-        Runtime r = Runtime.getRuntime();
-
         try {
-            Process p = r.exec(cmd + bar);
+            ProcessBuilder pb = new ProcessBuilder(cmd, bar);
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
