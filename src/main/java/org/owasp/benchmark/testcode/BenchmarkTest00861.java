@@ -72,7 +72,18 @@ public class BenchmarkTest00861 extends HttpServlet {
             String base = "ou=users,ou=system";
             javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
             sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
-            String filter = "(&(objectclass=person)(uid=" + bar + "))";
+            javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
+sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+javax.naming.directory.DirContext ctx = ads.getDirContext();
+String base = "ou=users,ou=system";
+
+// Use parameterized LDAP filter with placeholder
+String filter = "(&(objectclass=person)(uid={0}))";
+javax.naming.directory.SearchControls searchControls = new javax.naming.directory.SearchControls();
+searchControls.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+
+// Use parameterized search to avoid LDAP injection
+javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results = ctx.search(base, filter, new Object[]{bar}, searchControls);
             boolean found = false;
             javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
                     ctx.search(base, filter, sc);
