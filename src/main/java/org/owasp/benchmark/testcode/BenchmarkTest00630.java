@@ -72,14 +72,39 @@ public class BenchmarkTest00630 extends HttpServlet {
             String base = "ou=users,ou=system";
             javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
             sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
-            String filter = "(&(objectclass=person)(uid=" + bar + "))";
-
+            String filter = "(&(objectclass=person)(uid={0}))";
+            String safeBar = org.owasp.esapi.ESAPI.encoder().encodeForLDAP(bar);
             javax.naming.directory.DirContext ctx = ads.getDirContext();
-            javax.naming.directory.InitialDirContext idc =
-                    (javax.naming.directory.InitialDirContext) ctx;
+            javax.naming.directory.InitialDirContext idc = (javax.naming.directory.InitialDirContext) ctx;
+            javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
+            sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+            javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results = idc.search(base, filter, new Object[]{safeBar}, sc);
+
             boolean found = false;
-            javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
-                    idc.search(base, filter, sc);
+            while (results.hasMore()) {
+                javax.naming.directory.SearchResult sr = (javax.naming.directory.SearchResult) results.next();
+                javax.naming.directory.Attributes attrs = sr.getAttributes();
+
+                javax.naming.directory.Attribute attr = attrs.get("uid");
+                javax.naming.directory.Attribute attr2 = attrs.get("street");
+                if (attr != null) {
+                    response.getWriter()
+                            .println(
+                                    "LDAP query results:<br>"
+                                            + "Record found with name "
+                                            + org.owasp.esapi.ESAPI.encoder().encodeForHTML(attr.get().toString())
+                                            + "<br>Address: "
+                                            + org.owasp.esapi.ESAPI.encoder().encodeForHTML(attr2.get().toString())
+                                            + "<br>");
+                    found = true;
+                }
+            }
+            if (!found) {
+                response.getWriter()
+                        .println(
+                                "LDAP query results: nothing found for query: "
+                                        + org.owasp.esapi.ESAPI.encoder().encodeForHTML(filter));
+            }
 
             while (results.hasMore()) {
                 javax.naming.directory.SearchResult sr =
