@@ -57,15 +57,16 @@ public class BenchmarkTest00012 extends HttpServlet {
             String base = "ou=users,ou=system";
             javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
             sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
-            String filter = "(&(objectclass=person))(|(uid=" + param + ")(street={0}))";
-            Object[] filters = new Object[] {"The streetz 4 Ms bar"};
+            String escapedParam = org.owasp.esapi.ESAPI.encoder().encodeForLDAP(param);
+String filter = "(&(objectclass=person))(|(uid={0})(street={1}))";
+Object[] filters = new Object[] {escapedParam, "The streetz 4 Ms bar"};
 
-            javax.naming.directory.DirContext ctx = ads.getDirContext();
-            javax.naming.directory.InitialDirContext idc =
-                    (javax.naming.directory.InitialDirContext) ctx;
-            boolean found = false;
-            javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
-                    idc.search(base, filter, filters, sc);
+javax.naming.directory.DirContext ctx = ads.getDirContext();
+javax.naming.directory.InitialDirContext idc =
+        (javax.naming.directory.InitialDirContext) ctx;
+boolean found = false;
+javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
+        idc.search(base, filter, filters, sc);
             while (results.hasMore()) {
                 javax.naming.directory.SearchResult sr =
                         (javax.naming.directory.SearchResult) results.next();
