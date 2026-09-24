@@ -70,22 +70,20 @@ public class BenchmarkTest00103 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String sql =
-                "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
-        try {
-            Object results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForObject(
-                            sql, new Object[] {}, String.class);
-            response.getWriter().println("Your results are: ");
-
-            response.getWriter()
-                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(results.toString()));
-        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-            response.getWriter()
-                    .println(
-                            "No results returned for query: "
-                                    + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
-        } catch (org.springframework.dao.DataAccessException e) {
+        String sql = "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD=?";
+        try (java.sql.Connection connection = org.owasp.benchmark.helpers.DatabaseHelper.getSQLConnection();
+             java.sql.PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, bar);
+            try (java.sql.ResultSet results = statement.executeQuery()) {
+                if (results.next()) {
+                    String resultString = results.getString("USERNAME");
+                    response.getWriter().println("Your results are: ");
+                    response.getWriter().println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(resultString));
+                } else {
+                    response.getWriter().println("No results returned for query: " + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
+                }
+            }
+        } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
             } else throw new ServletException(e);
