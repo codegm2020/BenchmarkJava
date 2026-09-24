@@ -44,10 +44,11 @@ public class BenchmarkTest00026 extends HttpServlet {
         String param = request.getParameter("BenchmarkTest00026");
         if (param == null) param = "";
 
-        String sql = "SELECT  * from USERS where USERNAME='foo' and PASSWORD='" + param + "'";
+        String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
         try {
-            org.springframework.jdbc.support.rowset.SqlRowSet results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForRowSet(sql);
+            java.sql.PreparedStatement ps = org.owasp.benchmark.helpers.DatabaseHelper.getConnection().prepareStatement(sql);
+            ps.setString(1, param);
+            java.sql.ResultSet results = ps.executeQuery();
             response.getWriter().println("Your results are: ");
 
             while (results.next()) {
@@ -58,8 +59,10 @@ public class BenchmarkTest00026 extends HttpServlet {
                                                 .ESAPI
                                                 .encoder()
                                                 .encodeForHTML(results.getString("USERNAME"))
-                                        + " ");
+                                + " ");
             }
+            results.close();
+            ps.close();
         } catch (org.springframework.dao.EmptyResultDataAccessException e) {
             response.getWriter()
                     .println(
