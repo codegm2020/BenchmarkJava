@@ -55,9 +55,16 @@ public class BenchmarkTest00051 extends HttpServlet {
             a1 = "sh";
             a2 = "-c";
         }
-        String[] args = {a1, a2, "echo " + param};
+        // Validate param to allow only safe characters (alphanumeric and space) or reject
+        if (!param.matches("[a-zA-Z0-9 ]*")) {
+            throw new ServletException("Invalid input parameter");
+        }
 
-        ProcessBuilder pb = new ProcessBuilder(args);
+        String[] args = {a1, a2, "echo", param};
+
+        // Use ProcessBuilder with separate arguments to avoid shell interpretation
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command(a1, a2, "echo", param);
 
         try {
             Process p = pb.start();
