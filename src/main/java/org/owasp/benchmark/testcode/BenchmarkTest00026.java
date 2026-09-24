@@ -44,10 +44,11 @@ public class BenchmarkTest00026 extends HttpServlet {
         String param = request.getParameter("BenchmarkTest00026");
         if (param == null) param = "";
 
-        String sql = "SELECT  * from USERS where USERNAME='foo' and PASSWORD='" + param + "'";
+        String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
         try {
-            org.springframework.jdbc.support.rowset.SqlRowSet results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForRowSet(sql);
+            java.sql.PreparedStatement ps = org.owasp.benchmark.helpers.DatabaseHelper.getConnection().prepareStatement(sql);
+            ps.setString(1, param);
+            java.sql.ResultSet results = ps.executeQuery();
             response.getWriter().println("Your results are: ");
 
             while (results.next()) {
@@ -58,14 +59,11 @@ public class BenchmarkTest00026 extends HttpServlet {
                                                 .ESAPI
                                                 .encoder()
                                                 .encodeForHTML(results.getString("USERNAME"))
-                                        + " ");
+                                + " ");
             }
-        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-            response.getWriter()
-                    .println(
-                            "No results returned for query: "
-                                    + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
-        } catch (org.springframework.dao.DataAccessException e) {
+            results.close();
+            ps.close();
+        } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
             } else throw new ServletException(e);
