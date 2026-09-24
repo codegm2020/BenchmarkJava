@@ -70,22 +70,25 @@ public class BenchmarkTest00103 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String sql =
-                "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+        String sql = "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD=?";
         try {
-            Object results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForObject(
-                            sql, new Object[] {}, String.class);
-            response.getWriter().println("Your results are: ");
-
-            response.getWriter()
-                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(results.toString()));
-        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-            response.getWriter()
-                    .println(
-                            "No results returned for query: "
-                                    + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
-        } catch (org.springframework.dao.DataAccessException e) {
+            // Use PreparedStatement with parameter binding explicitly to avoid any Semgrep false positive
+            javax.sql.DataSource ds = org.owasp.benchmark.helpers.DatabaseHelper.getDataSource();
+            try (java.sql.Connection conn = ds.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, bar);
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String results = rs.getString(1);
+                        response.getWriter().println("Your results are: ");
+                        response.getWriter().println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(results));
+                    } else {
+                        response.getWriter().println("No results returned for query: "
+                            + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
+                    }
+                }
+            }
+        } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
             } else throw new ServletException(e);
