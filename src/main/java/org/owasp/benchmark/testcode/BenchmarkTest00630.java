@@ -72,18 +72,20 @@ public class BenchmarkTest00630 extends HttpServlet {
             String base = "ou=users,ou=system";
             javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
             sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
-            String filter = "(&(objectclass=person)(uid=" + bar + "))";
+            import org.owasp.esapi.ESAPI;
 
+            String barEncoded = ESAPI.encoder().encodeForLDAP(bar);
+
+            String filter = "(&(objectclass=person)(uid={0}))";
             javax.naming.directory.DirContext ctx = ads.getDirContext();
-            javax.naming.directory.InitialDirContext idc =
-                    (javax.naming.directory.InitialDirContext) ctx;
-            boolean found = false;
-            javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
-                    idc.search(base, filter, sc);
+            javax.naming.directory.InitialDirContext idc = (javax.naming.directory.InitialDirContext) ctx;
+            javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
+            sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+            javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results = idc.search(base, filter, new Object[]{barEncoded}, sc);
 
+            boolean found = false;
             while (results.hasMore()) {
-                javax.naming.directory.SearchResult sr =
-                        (javax.naming.directory.SearchResult) results.next();
+                javax.naming.directory.SearchResult sr = (javax.naming.directory.SearchResult) results.next();
                 javax.naming.directory.Attributes attrs = sr.getAttributes();
 
                 javax.naming.directory.Attribute attr = attrs.get("uid");
@@ -93,17 +95,9 @@ public class BenchmarkTest00630 extends HttpServlet {
                             .println(
                                     "LDAP query results:<br>"
                                             + "Record found with name "
-                                            + org.owasp
-                                                    .esapi
-                                                    .ESAPI
-                                                    .encoder()
-                                                    .encodeForHTML(attr.get().toString())
+                                            + ESAPI.encoder().encodeForHTML(attr.get().toString())
                                             + "<br>Address: "
-                                            + org.owasp
-                                                    .esapi
-                                                    .ESAPI
-                                                    .encoder()
-                                                    .encodeForHTML(attr2.get().toString())
+                                            + ESAPI.encoder().encodeForHTML(attr2.get().toString())
                                             + "<br>");
                     found = true;
                 }
@@ -112,7 +106,7 @@ public class BenchmarkTest00630 extends HttpServlet {
                 response.getWriter()
                         .println(
                                 "LDAP query results: nothing found for query: "
-                                        + org.owasp.esapi.ESAPI.encoder().encodeForHTML(filter));
+                                        + ESAPI.encoder().encodeForHTML(filter));
             }
         } catch (javax.naming.NamingException e) {
             throw new ServletException(e);
