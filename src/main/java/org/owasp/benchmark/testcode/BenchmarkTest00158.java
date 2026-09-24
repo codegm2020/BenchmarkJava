@@ -52,8 +52,12 @@ public class BenchmarkTest00158 extends HttpServlet {
 
         // Simple if statement that assigns constant to bar on true condition
         int num = 86;
-        if ((7 * 42) - num > 200) bar = "This_should_always_happen";
-        else bar = param;
+        if ((7 * 42) - num > 200) {
+            bar = "This_should_always_happen";
+        } else {
+            // Reject user input to avoid command injection
+            bar = "";
+        }
 
         java.util.List<String> argList = new java.util.ArrayList<String>();
 
@@ -61,11 +65,14 @@ public class BenchmarkTest00158 extends HttpServlet {
         if (osName.indexOf("Windows") != -1) {
             argList.add("cmd.exe");
             argList.add("/c");
+            argList.add("echo");
+            argList.add(bar);
         } else {
             argList.add("sh");
             argList.add("-c");
+            argList.add("echo");
+            argList.add(bar);
         }
-        argList.add("echo " + bar);
 
         ProcessBuilder pb = new ProcessBuilder(argList);
 

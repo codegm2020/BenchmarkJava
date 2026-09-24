@@ -62,9 +62,19 @@ public class BenchmarkTest00159 extends HttpServlet {
             a1 = "sh";
             a2 = "-c";
         }
-        String[] args = {a1, a2, "echo " + bar};
 
-        ProcessBuilder pb = new ProcessBuilder(args);
+        // Validate bar to allow only safe characters (alphanumeric and limited punctuation)
+        if (!bar.matches("[a-zA-Z0-9_\- ]*")) {
+            throw new ServletException("Invalid input detected");
+        }
+
+        // Use ProcessBuilder with separate arguments to avoid shell interpretation
+        ProcessBuilder pb = new ProcessBuilder();
+        if (osName.indexOf("Windows") != -1) {
+            pb.command("cmd.exe", "/c", "echo", bar);
+        } else {
+            pb.command("sh", "-c", "echo", bar);
+        }
 
         try {
             Process p = pb.start();
