@@ -63,18 +63,27 @@ public class BenchmarkTest00091 extends HttpServlet {
             }
         }
 
-        String bar = param;
+        // Strictly whitelist the param value to avoid injection
+        String bar;
+        switch (param) {
+            case "safeValue1":
+                bar = "safeValue1";
+                break;
+            case "safeValue2":
+                bar = "safeValue2";
+                break;
+            default:
+                bar = "defaultSafeValue";
+                break;
+        }
 
-        String cmd =
-                org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
-                        this.getClass().getClassLoader());
-        String[] args = {cmd};
-        String[] argsEnv = {bar};
+        String cmd = org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(this.getClass().getClassLoader());
 
-        Runtime r = Runtime.getRuntime();
+        // Use ProcessBuilder with separate arguments to avoid injection
+        ProcessBuilder pb = new ProcessBuilder(cmd, bar);
 
         try {
-            Process p = r.exec(args, argsEnv);
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
