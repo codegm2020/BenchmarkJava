@@ -67,21 +67,20 @@ public class BenchmarkTest00102 extends HttpServlet {
                 org.owasp.benchmark.helpers.ThingFactory.createThing();
         String bar = thing.doSomething(param);
 
-        String sql =
-                "SELECT TOP 1 userid from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
-        try {
-            java.util.Map<String, Object> results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForMap(sql);
-            response.getWriter().println("Your results are: ");
-
-            response.getWriter()
-                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(results.toString()));
-        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-            response.getWriter()
-                    .println(
-                            "No results returned for query: "
-                                    + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
-        } catch (org.springframework.dao.DataAccessException e) {
+        String sql = "SELECT TOP 1 userid from USERS where USERNAME='foo' and PASSWORD=?";
+        try (java.sql.Connection connection = org.owasp.benchmark.helpers.DatabaseHelper.getSQLConnection();
+             java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, bar);
+            try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String result = "userid: " + rs.getString("userid");
+                    response.getWriter().println("Your results are: ");
+                    response.getWriter().println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(result));
+                } else {
+                    response.getWriter().println("No results returned for query: " + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
+                }
+            }
+        } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
             } else throw new ServletException(e);
