@@ -67,12 +67,15 @@ public class BenchmarkTest00120 extends HttpServlet {
         try {
             javax.crypto.Cipher c =
                     javax.crypto.Cipher.getInstance(
-                            "DES/CBC/PKCS5PADDING", java.security.Security.getProvider("SunJCE"));
+                            "AES/GCM/NoPadding", java.security.Security.getProvider("SunJCE"));
 
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
-            java.security.spec.AlgorithmParameterSpec paramSpec =
-                    new javax.crypto.spec.IvParameterSpec(iv);
+            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("AES").generateKey();
+
+            // GCM standard nonce length is 12 bytes
+            byte[] ivGCM = new byte[12];
+            new java.security.SecureRandom().nextBytes(ivGCM);
+            javax.crypto.spec.GCMParameterSpec paramSpec = new javax.crypto.spec.GCMParameterSpec(128, ivGCM);
             c.init(javax.crypto.Cipher.ENCRYPT_MODE, key, paramSpec);
 
             // encrypt and store the results
