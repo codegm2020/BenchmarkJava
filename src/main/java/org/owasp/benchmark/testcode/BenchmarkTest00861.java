@@ -72,7 +72,14 @@ public class BenchmarkTest00861 extends HttpServlet {
             String base = "ou=users,ou=system";
             javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
             sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
-            String filter = "(&(objectclass=person)(uid=" + bar + "))";
+            String filter = "(&(objectclass=person)(uid={0}))";
+javax.naming.directory.SearchControls sc = new javax.naming.directory.SearchControls();
+sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+javax.naming.directory.DirContext ctx = ads.getDirContext();
+javax.naming.directory.SearchControls controls = new javax.naming.directory.SearchControls();
+controls.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE);
+javax.naming.directory.SearchResult result = null;
+javax.naming.directory.NamingEnumeration<javax.naming.directory.SearchResult> results = ctx.search(base, filter, new Object[]{bar}, controls);
             boolean found = false;
             javax.naming.NamingEnumeration<javax.naming.directory.SearchResult> results =
                     ctx.search(base, filter, sc);
