@@ -56,11 +56,13 @@ public class BenchmarkTest00020 extends HttpServlet {
 
         try {
             javax.crypto.Cipher c =
-                    javax.crypto.Cipher.getInstance("DES/CBC/PKCS5Padding", "SunJCE");
+                    javax.crypto.Cipher.getInstance("AES/GCM/NoPadding", "SunJCE");
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
+            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("AES").generateKey();
+            // GCM requires 12 byte IV
+            byte[] iv = random.generateSeed(12);
             java.security.spec.AlgorithmParameterSpec paramSpec =
-                    new javax.crypto.spec.IvParameterSpec(iv);
+                    new javax.crypto.spec.GCMParameterSpec(128, iv);
             c.init(javax.crypto.Cipher.ENCRYPT_MODE, key, paramSpec);
 
             // encrypt and store the results
